@@ -15,11 +15,13 @@ describe("Company Routes Test", function () {
             name: 'Test Company Name',
             num_employees: 500,
             description: 'test description about company',
-            logo_url: 'http://randomurl.com'
+            logo_url: 'http://randomurl.com',
+            jobs: []
         });
         c2 = await Company.create({
             handle: 'TestComp2',
             name: 'Test Company Name2',
+            jobs: [],
             num_employees: 300,
             description: 'test description about company',
             logo_url: 'http://randomurl.com'
@@ -27,6 +29,7 @@ describe("Company Routes Test", function () {
         c3 = await Company.create({
             handle: 'TestComp3',
             name: 'Test Company Name3',
+            jobs: [],
             num_employees: 200,
             description: 'test description about company',
             logo_url: 'http://randomurl.com'
