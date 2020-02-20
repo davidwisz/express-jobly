@@ -51,7 +51,7 @@ class Company {
     [handle]);
     let company = result.rows[0];
     
-    const jobResults = await db.query(`SELECT title, salary, equity, date_posted FROM jobs WHERE company_handle = $1`, [handle]);
+    const jobResults = await db.query(`SELECT company_handle, title, salary, equity, date_posted FROM jobs WHERE company_handle = $1`, [handle]);
     let jobs = jobResults.rows;
 
     company.jobs = jobs;
@@ -59,8 +59,6 @@ class Company {
     return company;
 
   }
-
-
 
   static async create(data){
     const { handle, name, num_employees, description, logo_url } = data;
