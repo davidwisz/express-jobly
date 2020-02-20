@@ -1,3 +1,7 @@
+DROP TABLE IF EXISTS jobs;
+DROP TABLE IF EXISTS companies;
+
+
 CREATE TABLE companies (
     handle text PRIMARY KEY,
     name text NOT NULL UNIQUE,
@@ -11,6 +15,6 @@ CREATE TABLE jobs (
     title text NOT NULL,
     salary FLOAT,
     equity FLOAT(1) NOT NULL CHECK (equity >= 0),
-    company_handle text NOT NULL REFERENCES companies,
+    company_handle text NOT NULL REFERENCES companies ON DELETE CASCADE,
     date_posted timestamp with time zone
 );

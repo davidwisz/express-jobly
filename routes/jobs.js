@@ -1,24 +1,24 @@
 const express = require("express");
-const Company = require("../models/company");
+const Job = require("../models/job");
 const jsonschema = require("jsonschema");
-const companySchema = require("../schemas/companySchema.json");
-const companyPatchSchema = require("../schemas/companyPatchSchema.json");
+const jobSchema = require("../schemas/jobSchema.json");
+const jobPatchSchema = require("../schemas/jobPatchSchema.json");
 const ExpressError = require("../helpers/expressError");
 
 const router = new express.Router();
 
 router.get("/", async function (req, res, next) {
 	try {
-		let companies = null;
+		let jobs = null;
 		const searchParams = Object.keys(req.query);
 
 		if (searchParams.length) {
-			companies = await Company.getCompaniesByQuery(req.query)
+			jobs = await Job.getCompaniesByQuery(req.query)
 		} else {
-			companies = await Company.getAll();
+			jobs = await Job.getAll();
 		}
 
-		return res.json({ companies });
+		return res.json({ jobs });
 	} catch (err) {
 		return next(err);
 	}
@@ -26,8 +26,8 @@ router.get("/", async function (req, res, next) {
 
 router.get("/:handle", async function (req, res, next) {
 	try {
-		const company = await Company.getOne(req.params.handle);
-		return res.json({ company });
+		const job = await Job.getOne(req.params.handle);
+		return res.json({ job });
 	} catch (err) {
 		return next(err);
 	}
@@ -35,15 +35,15 @@ router.get("/:handle", async function (req, res, next) {
 
 router.post("/", async function (req, res, next) {
 	try {
-		const result = jsonschema.validate(req.body, companySchema);
+		const result = jsonschema.validate(req.body, jobSchema);
 
 		if (!result.valid) {
 			let listOfErrors = result.errors.map(error => error.stack);
 			throw new ExpressError(listOfErrors, 400);
 		}
 
-		const company = await Company.create(req.body);
-		return res.json({ company }, 201);
+		const job = await Job.create(req.body);
+		return res.json({ job }, 201);
 	} catch (err) {
 		return next(err);
 	}
@@ -51,16 +51,17 @@ router.post("/", async function (req, res, next) {
 
 router.patch("/:handle", async function(req, res, next){
 	try {
-		const result = jsonschema.validate(req.body, companyPatchSchema);
+
+		const result = jsonschema.validate(req.body, jobPatchSchema);
 
 		if (!result.valid) {
 			let listOfErrors = result.errors.map(error => error.stack);
 			throw new ExpressError(listOfErrors, 400);
 		}
 
-		const company = await Company.edit(req.params.handle, req.body);
+		const job = await Job.edit(req.params.handle, req.body);
 
-		return res.json({ company });
+		return res.json({ job });
 
 	} catch (err) {
 		return next(err);
@@ -70,9 +71,9 @@ router.patch("/:handle", async function(req, res, next){
 router.delete("/:handle", async function(req, res, next){
 	try {
 
-		await Company.remove(req.params.handle);
+		await Job.remove(req.params.handle);
 
-		return res.json({message: "Company deleted."});
+		return res.json({message: "Job deleted."});
 
 	} catch (err) {
 		return next(err)
