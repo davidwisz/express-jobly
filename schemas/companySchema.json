@@ -1,0 +1,68 @@
+{
+    "definitions": {},
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "http://example.com/root.json",
+    "type": "object",
+    "title": "The Root Schema",
+    "required": [
+      "handle",
+      "name",
+      "num_employees",
+      "description",
+      "logo_url"
+    ],
+    "properties": {
+      "handle": {
+        "$id": "#/properties/handle",
+        "type": "string",
+        "title": "The Handle Schema",
+        "default": "",
+        "examples": [
+          "RTHM"
+        ],
+        "minLength": 1,
+        "pattern": "^(.*)$"
+      },
+      "name": {
+        "$id": "#/properties/name",
+        "type": "string",
+        "title": "The Name Schema",
+        "default": "",
+        "examples": [
+          "Rithm School"
+        ],
+        "pattern": "^(.*)$"
+      },
+      "num_employees": {
+        "$id": "#/properties/num_employees",
+        "type": "integer",
+        "title": "The Num_employees Schema",
+        "default": 0,
+        "examples": [
+          18
+        ],
+        "minimum": 1.0
+      },
+      "description": {
+        "$id": "#/properties/description",
+        "type": "string",
+        "title": "The Description Schema",
+        "default": "",
+        "examples": [
+          "a great school to learn how to use a computer"
+        ],
+        "pattern": "^(.*)$"
+      },
+      "logo_url": {
+        "$id": "#/properties/logo_url",
+        "type": "string",
+        "title": "The Logo_url Schema",
+        "default": "",
+        "examples": [
+          "https://www.rithmschool.com/assets/logos/rithm_logo-0bbe0cba0becc168bb1ed46540bd26d6921d9f5194372128512268c203687780.svg"
+        ],
+        "pattern": "^(.*)$",
+        "format": "uri"
+      }
+    }
+  }

@@ -12,7 +12,6 @@ const app = express();
 
 app.use(express.json());
 
-
 // add logging system
 app.use(morgan("tiny"));
 
