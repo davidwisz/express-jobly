@@ -56,6 +56,18 @@ class Company {
 
     company.jobs = jobs;
 
+    // SELECT * FROM COMAPNIES JOIN JOBS ON HANDLE= HDANDEL_ANME ORDER BY HANDLE
+
+    // let jobsArr= [];
+    
+    // result.rows.forEach(function (obj) {
+    //   const {title, salary, equity} = obj
+    //   jobsArr.push({title, salary, equity})
+    // })
+    
+    // result.rows[0].jobs = jobsArr
+    
+    // return result.rows[0]
     return company;
 
   }
