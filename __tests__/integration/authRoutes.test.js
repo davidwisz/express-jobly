@@ -2,6 +2,7 @@ process.env.NODE_ENV = "test";
 const app = require("../../app");
 const db = require("../../db");
 const User = require("../../models/user");
+
 const request = require("supertest");
 
 describe("User Routes Test", function () {
@@ -10,7 +11,7 @@ describe("User Routes Test", function () {
   beforeEach(async function () {
     await db.query("DELETE FROM users");
     u1 = await User.create({
-      username: "A",
+      username: "NotAdmin",
       password: "somepassword",
       first_name: "John",
       last_name: "Doe",
@@ -18,24 +19,17 @@ describe("User Routes Test", function () {
       photo_url: "http://someurl.com"
     });
     u2 = await User.create({
-      username: "B",
+      username: "Admin",
       password: "somepassword",
       first_name: "John",
       last_name: "Doe",
       email: "anotheremail@gmail.com",
-      photo_url: "http://someurl.com"
-    });
-    u3 = await User.create({
-      username: "C",
-      password: "somepassword",
-      first_name: "John",
-      last_name: "Doe",
-      email: "testemail@gmail.com",
-      photo_url: "http://someurl.com"
+      photo_url: "http://someurl.com",
+      is_admin: true
     });
   })
 
-  describe("GET /users/", function () {
+  describe("POST /login", function () {
     test("can get all users", async function () {
       let response = await request(app)
         .get('/users');

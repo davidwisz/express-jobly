@@ -28,7 +28,7 @@ class User {
   
   static async authenticate(username, password) {
     const result = await db.query(`
-      SELECT password 
+      SELECT password, is_admin
       FROM users 
       WHERE username = $1`,
       [username]);
@@ -36,7 +36,9 @@ class User {
     
     if (user){
       let isValid = await bycrpt.compare(password, user.password);
-      return isValid;
+      if (isValid) {
+        return user;
+      }
     }
     return false;
   }
@@ -71,9 +73,10 @@ class User {
     DELETE FROM users WHERE username = $1 RETURNING username`,
     [username]);
     if (!result.rows.length) {
-      throw new ExpressError(`There is no user with a username '${username}`, 404);
+      throw new ExpressError(`There is no user with a username ${username}`, 404);
     }
   }
+  
 }
 
 module.exports = User;

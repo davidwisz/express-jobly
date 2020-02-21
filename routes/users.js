@@ -4,10 +4,11 @@ const jsonschema = require("jsonschema");
 const userSchema = require("../schemas/userSchema.json");
 const userPatchSchema = require("../schemas/userPatchSchema.json");
 const ExpressError = require("../helpers/expressError");
+const { ensureLoggedIn, ensureCorrectUser } = require('../middleware/auth');
 
 const router = new express.Router();
 
-router.get("/", async function (req, res, next) {
+router.get("/", ensureLoggedIn, async function (req, res, next) {
 	try {
 
 		users = await User.getAll();
@@ -18,7 +19,7 @@ router.get("/", async function (req, res, next) {
 	}
 });
 
-router.get("/:username", async function (req, res, next) {
+router.get("/:username", ensureLoggedIn, async function (req, res, next) {
 	try {
 		const user = await User.getOne(req.params.username);
 		return res.json({ user });
@@ -44,7 +45,7 @@ router.post("/", async function (req, res, next) {
 	}
 })
 
-router.patch("/:username", async function(req, res, next){
+router.patch("/:username", ensureLoggedIn, ensureCorrectUser, async function(req, res, next){
 	try {
 		const result = jsonschema.validate(req.body, userPatchSchema);
 
@@ -62,7 +63,7 @@ router.patch("/:username", async function(req, res, next){
 	}
 })
 
-router.delete("/:username", async function(req, res, next){
+router.delete("/:username", ensureLoggedIn, ensureCorrectUser, async function(req, res, next){
 	try {
 
 		await User.remove(req.params.username);

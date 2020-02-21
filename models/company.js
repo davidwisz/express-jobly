@@ -45,30 +45,35 @@ class Company {
   }
 
 
-  static async getOne(handle){
-    const result = await db.query(`
-      SELECT handle, name, num_employees, description, logo_url FROM companies WHERE handle = $1`, 
-    [handle]);
-    let company = result.rows[0];
-    
-    const jobResults = await db.query(`SELECT id, company_handle, title, salary, equity, date_posted FROM jobs WHERE company_handle = $1`, [handle]);
-    let jobs = jobResults.rows;
+  static async getOne(temp_handle){
+    // const result = await db.query(`
+    //   SELECT handle, name, num_employees, description, logo_url FROM companies WHERE handle = $1`, 
+    // [handle]);
 
-    company.jobs = jobs;
+    const result = await db.query(`SELECT * FROM companies JOIN jobs ON handle = company_handle WHERE handle = $1 ORDER BY handle`,[temp_handle]);
 
-    // SELECT * FROM COMAPNIES JOIN JOBS ON HANDLE= HDANDEL_ANME ORDER BY HANDLE
+    let jobsArr= [];
 
-    // let jobsArr= [];
+    result.rows.forEach(function (obj) {
+      const {title, salary, equity} = obj
+      jobsArr.push({title, salary, equity})
+    })
+
+    let { handle, name, num_employees, description, logo_url } = result.rows[0];
+    let company = { handle, name, num_employees, description, logo_url };
+    company.jobs = jobsArr;
     
-    // result.rows.forEach(function (obj) {
-    //   const {title, salary, equity} = obj
-    //   jobsArr.push({title, salary, equity})
-    // })
-    
-    // result.rows[0].jobs = jobsArr
-    
-    // return result.rows[0]
     return company;
+
+    // let company = result.rows[0];
+    
+    // const jobResults = await db.query(`SELECT id, company_handle, title, salary, equity, date_posted FROM jobs WHERE company_handle = $1`, [handle]);
+    // let jobs = jobResults.rows;
+
+    // company.jobs = jobs;
+
+    // 
+    // return company;
 
   }
 

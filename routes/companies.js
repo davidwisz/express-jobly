@@ -4,8 +4,10 @@ const jsonschema = require("jsonschema");
 const companySchema = require("../schemas/companySchema.json");
 const companyPatchSchema = require("../schemas/companyPatchSchema.json");
 const ExpressError = require("../helpers/expressError");
+const { ensureLoggedIn, ensureIsAdmin } = require('../middleware/auth');
 
 const router = new express.Router();
+router.use(ensureLoggedIn);
 
 router.get("/", async function (req, res, next) {
 	try {
@@ -30,7 +32,7 @@ router.get("/:handle", async function (req, res, next) {
 	}
 });
 
-router.post("/", async function (req, res, next) {
+router.post("/", ensureIsAdmin, async function (req, res, next) {
 	try {
 		const result = jsonschema.validate(req.body, companySchema);
 
@@ -46,7 +48,7 @@ router.post("/", async function (req, res, next) {
 	}
 })
 
-router.patch("/:handle", async function(req, res, next){
+router.patch("/:handle", ensureIsAdmin, async function(req, res, next){
 	try {
 		const result = jsonschema.validate(req.body, companyPatchSchema);
 
@@ -64,7 +66,7 @@ router.patch("/:handle", async function(req, res, next){
 	}
 })
 
-router.delete("/:handle", async function(req, res, next){
+router.delete("/:handle", ensureIsAdmin, async function(req, res, next){
 	try {
 
 		await Company.remove(req.params.handle);

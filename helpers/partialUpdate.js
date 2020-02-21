@@ -24,6 +24,9 @@ function sqlForPartialUpdate(table, items, key, id) {
     if (key.startsWith("_")) {
       delete items[key];
     }
+    if (key === "token") {
+      delete items[key];
+    }
   }
 
   for (let column in items) {

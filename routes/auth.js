@@ -2,7 +2,7 @@ const express = require("express");
 const User = require("../models/user");
 const jwt = require("jsonwebtoken");
 const { SECRET_KEY, JWT_OPTIONS } = require("../config");
-const ExpressError = require('../expressError');
+const ExpressError = require('../helpers/expressError');
 
 const router = new express.Router();
 
@@ -17,11 +17,13 @@ app.use(express.json());
 router.post("/login", async function (req, res, next) {
   try {
     const { username, password } = req.body;
-    if (await User.authenticate(username, password)) {
-      let payload = { username };
+    let user = await User.authenticate(username, password);
+    if (user) {
+      let { is_admin } = user;
+      let payload = { username, is_admin };
       let token = jwt.sign(payload, SECRET_KEY, JWT_OPTIONS);
-      await User.updateLoginTimestamp();
-      return res.send({ _token: token });
+
+      return res.send({ token });
     } else {
       throw new ExpressError("Invalid Username/Password!", 400);
     }
@@ -42,7 +44,7 @@ router.post("/register", async function (req, res, next) {
     let payload = { username: results.username };
     let token = jwt.sign(payload, SECRET_KEY, JWT_OPTIONS);
     await User.updateLoginTimestamp();
-    return res.send({ _token: token });
+    return res.send({ token });
   } catch (err) {
     return next(err);
   }
