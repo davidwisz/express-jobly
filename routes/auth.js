@@ -40,10 +40,10 @@ router.post("/login", async function (req, res, next) {
  */
 router.post("/register", async function (req, res, next) {
   try {
-    let results = await User.register(req.body);
-    let payload = { username: results.username };
+    let results = await User.create(req.body);
+    let { is_admin } = results;
+    let payload = { username: results.username, is_admin };
     let token = jwt.sign(payload, SECRET_KEY, JWT_OPTIONS);
-    await User.updateLoginTimestamp();
     return res.send({ token });
   } catch (err) {
     return next(err);

@@ -32,6 +32,9 @@ class Job {
     
     let filter = whereArray.join(' AND ');
     let result = await db.query(`SELECT title, handle FROM jobs JOIN companies ON handle = company_handle WHERE ${filter} ORDER BY handle`, queryArray);
+    if (!result.rows.length) {
+      throw new ExpressError(`Your query didn't match any jobs.`, 404);
+    }
     return result.rows;
   }
 
@@ -47,7 +50,11 @@ class Job {
       FROM jobs 
       WHERE id = $1`, 
     [id]);
+    if (!result.rows.length) {
+      throw new ExpressError(`There is no job with an id ${id}`, 404);
+    }
     return result.rows[0];
+    
   }
 
 
@@ -66,6 +73,9 @@ class Job {
   static async edit(id, data){
     const { query, values } = partialUpdate('jobs', data, 'id', id);
     const result = await db.query(query, values);
+    if (!result.rows.length) {
+      throw new ExpressError(`There is no job with an id ${id}`, 404);
+    }
     return result.rows[0];
   }
 
@@ -74,7 +84,7 @@ class Job {
     DELETE FROM jobs WHERE id = $1 RETURNING id`,
     [id]);
     if (!result.rows.length) {
-      throw new ExpressError(`There is no job with an id '${id}`, 404);
+      throw new ExpressError(`There is no job with an id ${id}`, 404);
     }
   }
 }

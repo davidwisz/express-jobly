@@ -36,6 +36,9 @@ class Company {
     
     let filter = whereArray.join(' AND ');
     let result = await db.query(`SELECT handle, name FROM companies WHERE ${filter} ORDER BY handle`, queryArray);
+    if (!result.rows.length) {
+      throw new ExpressError(`Your query did not match any companies.`, 404);
+    }
     return result.rows;
   }
 
@@ -51,12 +54,14 @@ class Company {
     // [handle]);
 
     const result = await db.query(`SELECT * FROM companies JOIN jobs ON handle = company_handle WHERE handle = $1 ORDER BY handle`,[temp_handle]);
-
+    if (!result.rows.length) {
+      throw new ExpressError(`There is no company with the handle ${temp_handle}`, 404);
+    }
     let jobsArr= [];
 
     result.rows.forEach(function (obj) {
-      const {title, salary, equity} = obj
-      jobsArr.push({title, salary, equity})
+      const {id, title, salary, equity, date_posted} = obj
+      jobsArr.push({id, title, salary, equity, date_posted})
     })
 
     let { handle, name, num_employees, description, logo_url } = result.rows[0];
@@ -92,6 +97,9 @@ class Company {
   static async edit(handle, data){
     const { query, values } = partialUpdate('companies', data, 'handle', handle);
     const result = await db.query(query, values);
+    if (!result.rows.length) {
+      throw new ExpressError(`There is no company with the handle ${handle}`, 404);
+    }
     return result.rows[0];
   }
 
@@ -100,7 +108,7 @@ class Company {
     DELETE FROM companies WHERE handle = $1 RETURNING handle`,
     [handle]);
     if (!result.rows.length) {
-      throw new ExpressError(`There is no company with a handle '${handle}`, 404);
+      throw new ExpressError(`There is no company with the handle ${handle}`, 404);
     }
   }
 }

@@ -11,13 +11,16 @@ const { BCRYPT_WORK_FACTOR } = require('../config')
 class User {
 
   static async create(data) {
-    const { username, password, first_name, last_name, email, photo_url } = data;
+    let { username, password, first_name, last_name, email, photo_url, is_admin } = data;
     const hashedPassword = await bycrpt.hash(password, BCRYPT_WORK_FACTOR);
+    if (!is_admin) {
+      is_admin = false;
+    }
     const result = await db.query(
-      `INSERT INTO users (username, password, first_name, last_name, email, photo_url) 
-      VALUES ($1, $2, $3, $4, $5, $6)
-      RETURNING username, first_name, last_name, email, photo_url`,
-      [username, hashedPassword, first_name, last_name, email, photo_url]);
+      `INSERT INTO users (username, password, first_name, last_name, email, photo_url, is_admin) 
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      RETURNING username, first_name, last_name, email, photo_url, is_admin`,
+      [username, hashedPassword, first_name, last_name, email, photo_url, is_admin]);
       
     if (!result.rows[0]) {
       throw new ExpressError(`Invalid registration info`, 400);
@@ -53,15 +56,19 @@ class User {
     const result = await db.query(`
       SELECT username, first_name, last_name, email, photo_url FROM users WHERE username = $1`, 
     [username]);
+    if (!result.rows.length) {
+      throw new ExpressError(`There is no user with a username ${username}`, 404);
+    }
 
     return result.rows[0];
   }
 
-
-
   static async edit(username, data){
     const { query, values } = partialUpdate('users', data, 'username', username);
     const result = await db.query(query, values);
+    if (!result.rows.length) {
+      throw new ExpressError(`There is no user with a username ${username}`, 404);
+    }
     let user = result.rows[0];
     delete user.password;
     delete user.is_admin;

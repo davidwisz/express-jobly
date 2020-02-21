@@ -3,15 +3,29 @@ const app = require("../../app");
 const db = require("../../db");
 const Company = require("../../models/company");
 const Job = require("../../models/job");
+const User = require("../../models/user");
 const request = require("supertest");
 
 
 describe("Company Routes Test", function () {
-  let c1, c2, c3, j1, j2, j3;
+  let token, c1, c2, c3, j1, j2, j3;
 
   beforeEach(async function () {
     await db.query("DELETE FROM companies");
     await db.query("DELETE FROM jobs");
+    await db.query("DELETE FROM users");
+    let adminUser = {
+      username: 'john',
+      password: '123456',
+      first_name: 'John',
+      last_name: 'Smith',
+      email: 'email@email.com',
+      is_admin: true,
+    };
+    let response = await request(app).post(`/auth/register`).send(adminUser);
+    
+    token = response.body.token;
+
     c1 = await Company.create({
       handle: 'RITH',
       name: 'Test Company Name',
@@ -38,28 +52,25 @@ describe("Company Routes Test", function () {
       salary: 50000,
       equity: 0.005,
       company_handle: 'RITH',
-      date_posted: new Date()
     });
     j2 = await Job.create({
       title: 'Test Job2 Title',
       salary: 100000,
       equity: 0.015,
       company_handle: 'RITH',
-      date_posted: new Date()
     });
     j3 = await Job.create({
       title: 'Test Job3 Title',
       salary: 500000,
       equity: 0.05,
       company_handle: 'RITH',
-      date_posted: new Date()
     });
   })
 
   describe("GET /companies/", function () {
     test("can get all companies", async function () {
       let response = await request(app)
-        .get('/companies');
+        .get('/companies').send({ token });
       expect(response.statusCode).toEqual(200);
       expect(response.body.companies.length).toEqual(3);
       expect(response.body).toEqual({ companies: [{ handle: 'RITH', name: 'Test Company Name' }, { handle: 'TestComp2', name: 'Test Company Name2' }, { handle: 'TestComp3', name: 'Test Company Name3' }] });
@@ -69,11 +80,14 @@ describe("Company Routes Test", function () {
   describe("GET /companies/:handle", function () {
     test("can get a company", async function () {
       let response = await request(app)
-        .get(`/companies/${c1.handle}`)
+        .get(`/companies/${c1.handle}`).send({ token });
       expect(response.statusCode).toEqual(200);
       j1.date_posted = expect.any(String)
       j2.date_posted = expect.any(String)
       j3.date_posted = expect.any(String)
+      delete j1.company_handle;
+      delete j2.company_handle;
+      delete j3.company_handle;
       c1.jobs = [j1, j2, j3];
       expect(response.body).toEqual({ company: c1 })
     });
@@ -89,11 +103,11 @@ describe("Company Routes Test", function () {
         logo_url: 'http://randomurl2.com'
       }
       let response = await request(app)
-        .post('/companies').send(company);
+        .post('/companies').send({ ...company, token });
       expect(response.statusCode).toEqual(201);
       expect(response.body).toEqual({ company })
 
-      const getCompanyResponse = await request(app).get('/companies');
+      const getCompanyResponse = await request(app).get('/companies').send({ token });
       expect(getCompanyResponse.body.companies).toContainEqual({ handle: "AnotherTestComp", name: "Another Test Company Name2" });
       expect(getCompanyResponse.body.companies.length).toEqual(4)
 
@@ -108,7 +122,7 @@ describe("Company Routes Test", function () {
         logo_url: 'notaproperurl'
       }
       let response = await request(app)
-        .post('/companies').send(company);
+        .post('/companies').send({ ...company, token });
       expect(response.statusCode).toEqual(400);
       expect(response.body.message[0]).toContain('logo_url');
     });
@@ -121,7 +135,7 @@ describe("Company Routes Test", function () {
         description: 'another test description in the patch'
       }
       let response = await request(app)
-        .patch(`/companies/${c1.handle}`).send(changes);
+        .patch(`/companies/${c1.handle}`).send({ ...changes, token });
 
       expect(response.statusCode).toEqual(200);
       c1.num_employees = 1000;
@@ -131,8 +145,11 @@ describe("Company Routes Test", function () {
       j1.date_posted = expect.any(String)
       j2.date_posted = expect.any(String)
       j3.date_posted = expect.any(String)
+      delete j1.company_handle;
+      delete j2.company_handle;
+      delete j3.company_handle;
       c1.jobs = [j1,j2,j3]
-      const getCompanyResponse = await request(app).get('/companies/RITH');
+      const getCompanyResponse = await request(app).get('/companies/RITH').send({ token });
       expect(getCompanyResponse.body).toEqual({ company: c1 });
     });
 
@@ -144,7 +161,7 @@ describe("Company Routes Test", function () {
         logo_url: 'notaproperurl'
       }
       let response = await request(app)
-        .patch('/companies/RITH').send(company);
+        .patch('/companies/RITH').send({ ...company, token });
       expect(response.statusCode).toEqual(400);
       expect(response.body.message[0]).toContain('logo_url');
     });
@@ -153,11 +170,11 @@ describe("Company Routes Test", function () {
   describe("DELETE /companies/:handle", function () {
     test("can delete a company", async function () {
       let response = await request(app)
-        .delete(`/companies/${c1.handle}`)
+        .delete(`/companies/${c1.handle}`).send({ token });
       expect(response.statusCode).toEqual(200);
       expect(response.body).toEqual({ message: "Company deleted." });
 
-      let companyResponse = await request(app).get('/companies');
+      let companyResponse = await request(app).get('/companies').send({ token });
       expect(companyResponse.body.companies.length).toEqual(2);
     });
   });
