@@ -54,8 +54,7 @@ describe("Jobs Routes Test", function () {
       let response = await request(app)
         .get(`/jobs/${j1.id}`)
       expect(response.statusCode).toEqual(200);
-      // j1.date_posted = j1.date_posted;
-      expect(response.body).toEqual({ job: j1 })
+      expect(response.body).toEqual({ job: { ...j1, date_posted: expect.any(String) } })
     });
   });
 
@@ -70,11 +69,11 @@ describe("Jobs Routes Test", function () {
       let response = await request(app)
         .post('/jobs').send(job);
       expect(response.statusCode).toEqual(201);
-      expect(response.body.job).toMatchObject({title: job.title})
+      expect(response.body.job).toMatchObject({ title: job.title })
 
       const getJobResponse = await request(app).get('/jobs');
 
-      expect(getJobResponse.body.companies.length).toEqual(4)
+      expect(getJobResponse.body.jobs.length).toEqual(4)
 
     });
 
@@ -104,10 +103,10 @@ describe("Jobs Routes Test", function () {
       expect(response.statusCode).toEqual(200);
       j1.salary = 0;
       j1.title = 'Dog Groomer';
-      expect(response.body).toEqual({ job: j1 })
+      expect(response.body).toEqual({ job: {...j1, date_posted: expect.any(String)} })
 
-      const getJobResponse = await request(app).get('/jobs/${j1.id}');
-      expect(getJobResponse.body).toEqual({ job: j1 });
+      const getJobResponse = await request(app).get(`/jobs/${j1.id}`);
+      expect(getJobResponse.body).toEqual({ job: {...j1, date_posted: expect.any(String)} });
     });
 
     test("trying to update a job with invalid equity", async function () {
@@ -117,7 +116,7 @@ describe("Jobs Routes Test", function () {
         equity: 2
       }
       let response = await request(app)
-        .patch('/jobs/${j1.id}').send(job);
+        .patch(`/jobs/${j1.id}`).send(job);
       expect(response.statusCode).toEqual(400);
       expect(response.body.message[0]).toContain('equity');
     });
@@ -130,8 +129,8 @@ describe("Jobs Routes Test", function () {
       expect(response.statusCode).toEqual(200);
       expect(response.body).toEqual({ message: "Job deleted." });
 
-      let companyResponse = await request(app).get('/jobs');
-      expect(companyResponse.body.companies.length).toEqual(2);
+      let jobResponse = await request(app).get('/jobs');
+      expect(jobResponse.body.jobs.length).toEqual(2);
     });
   });
 });

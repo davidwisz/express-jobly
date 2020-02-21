@@ -17,21 +17,21 @@ describe("Company Routes Test", function () {
       name: 'Test Company Name',
       num_employees: 500,
       description: 'test description about company',
-      logo_url: 'http://randomurl.com',
+      logo_url: 'http://www.randomurl.com',
     });
     c2 = await Company.create({
       handle: 'TestComp2',
       name: 'Test Company Name2',
       num_employees: 300,
       description: 'test description about company',
-      logo_url: 'http://randomurl.com'
+      logo_url: 'http://www.randomurl.com'
     });
     c3 = await Company.create({
       handle: 'TestComp3',
       name: 'Test Company Name3',
       num_employees: 200,
       description: 'test description about company',
-      logo_url: 'http://randomurl.com'
+      logo_url: 'http://www.randomurl.com'
     });
     j1 = await Job.create({
       title: 'Test Job Title',
@@ -71,6 +71,9 @@ describe("Company Routes Test", function () {
       let response = await request(app)
         .get(`/companies/${c1.handle}`)
       expect(response.statusCode).toEqual(200);
+      j1.date_posted = expect.any(String)
+      j2.date_posted = expect.any(String)
+      j3.date_posted = expect.any(String)
       c1.jobs = [j1, j2, j3];
       expect(response.body).toEqual({ company: c1 })
     });
@@ -125,7 +128,11 @@ describe("Company Routes Test", function () {
       c1.description = 'another test description in the patch'
       expect(response.body).toEqual({ company: c1 })
 
-      const getCompanyResponse = await request(app).get('/companies/TestComp');
+      j1.date_posted = expect.any(String)
+      j2.date_posted = expect.any(String)
+      j3.date_posted = expect.any(String)
+      c1.jobs = [j1,j2,j3]
+      const getCompanyResponse = await request(app).get('/companies/RITH');
       expect(getCompanyResponse.body).toEqual({ company: c1 });
     });
 
@@ -137,7 +144,7 @@ describe("Company Routes Test", function () {
         logo_url: 'notaproperurl'
       }
       let response = await request(app)
-        .patch('/companies/TestComp').send(company);
+        .patch('/companies/RITH').send(company);
       expect(response.statusCode).toEqual(400);
       expect(response.body.message[0]).toContain('logo_url');
     });

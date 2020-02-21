@@ -9,14 +9,11 @@ const router = new express.Router();
 
 router.get("/", async function (req, res, next) {
 	try {
-		let companies = null;
 		const searchParams = Object.keys(req.query);
 
-		if (searchParams.length) {
-			companies = await Company.getCompaniesByQuery(req.query)
-		} else {
-			companies = await Company.getAll();
-		}
+		let companies = (searchParams.length) 
+			? await Company.getCompaniesByQuery(req.query)
+			: await Company.getAll();
 
 		return res.json({ companies });
 	} catch (err) {
