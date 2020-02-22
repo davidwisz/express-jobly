@@ -12,6 +12,20 @@ describe("Jobs Routes Test", function () {
   beforeEach(async function () {
     await db.query("DELETE FROM companies");
     await db.query("DELETE FROM jobs");
+    await db.query("DELETE FROM users");
+
+    let adminUser = {
+      username: 'john',
+      password: '123456',
+      first_name: 'John',
+      last_name: 'Smith',
+      email: 'email@email.com',
+      is_admin: true,
+    };
+    let response = await request(app).post(`/auth/register`).send(adminUser);
+
+    token = response.body.token;
+
     c1 = await Company.create({
       handle: 'RITH',
       name: 'Test Company Name',
@@ -42,7 +56,7 @@ describe("Jobs Routes Test", function () {
   describe("GET /jobs/", function () {
     test("can get all jobs", async function () {
       let response = await request(app)
-        .get('/jobs');
+        .get('/jobs').send({ token });
       expect(response.statusCode).toEqual(200);
       expect(response.body.jobs.length).toEqual(3);
       expect(response.body).toEqual({ "jobs": [{ "title": "Test Job Title", "handle": "RITH" }, { "title": "Test Job2 Title", "handle": "RITH" }, { "title": "Test Job3 Title", "handle": "RITH" }] });
@@ -52,7 +66,7 @@ describe("Jobs Routes Test", function () {
   describe("GET /jobs/:id", function () {
     test("can get a job", async function () {
       let response = await request(app)
-        .get(`/jobs/${j1.id}`)
+        .get(`/jobs/${j1.id}`).send({ token });
       expect(response.statusCode).toEqual(200);
       expect(response.body).toEqual({ job: { ...j1, date_posted: expect.any(String) } })
     });
@@ -67,11 +81,11 @@ describe("Jobs Routes Test", function () {
         company_handle: 'RITH',
       };
       let response = await request(app)
-        .post('/jobs').send(job);
+        .post('/jobs').send({ ...job, token });
       expect(response.statusCode).toEqual(201);
       expect(response.body.job).toMatchObject({ title: job.title })
 
-      const getJobResponse = await request(app).get('/jobs');
+      const getJobResponse = await request(app).get('/jobs').send({ token });
 
       expect(getJobResponse.body.jobs.length).toEqual(4)
 
@@ -85,7 +99,7 @@ describe("Jobs Routes Test", function () {
         company_handle: 'RITH',
       };
       let response = await request(app)
-        .post('/jobs').send(job);
+        .post('/jobs').send({ ...job, token });
       expect(response.statusCode).toEqual(400);
       expect(response.body.message[0]).toContain('equity');
     });
@@ -98,14 +112,14 @@ describe("Jobs Routes Test", function () {
         title: 'Dog Groomer'
       }
       let response = await request(app)
-        .patch(`/jobs/${j1.id}`).send(changes);
+        .patch(`/jobs/${j1.id}`).send({ ...changes, token });
 
       expect(response.statusCode).toEqual(200);
       j1.salary = 0;
       j1.title = 'Dog Groomer';
       expect(response.body).toEqual({ job: {...j1, date_posted: expect.any(String)} })
 
-      const getJobResponse = await request(app).get(`/jobs/${j1.id}`);
+      const getJobResponse = await request(app).get(`/jobs/${j1.id}`).send({ token });
       expect(getJobResponse.body).toEqual({ job: {...j1, date_posted: expect.any(String)} });
     });
 
@@ -116,7 +130,7 @@ describe("Jobs Routes Test", function () {
         equity: 2
       }
       let response = await request(app)
-        .patch(`/jobs/${j1.id}`).send(job);
+        .patch(`/jobs/${j1.id}`).send({ ...job, token });
       expect(response.statusCode).toEqual(400);
       expect(response.body.message[0]).toContain('equity');
     });
@@ -125,11 +139,11 @@ describe("Jobs Routes Test", function () {
   describe("DELETE /jobs/:id", function () {
     test("can delete a job", async function () {
       let response = await request(app)
-        .delete(`/jobs/${j1.id}`)
+        .delete(`/jobs/${j1.id}`).send({ token });
       expect(response.statusCode).toEqual(200);
       expect(response.body).toEqual({ message: "Job deleted." });
 
-      let jobResponse = await request(app).get('/jobs');
+      let jobResponse = await request(app).get('/jobs').send({ token });
       expect(jobResponse.body.jobs.length).toEqual(2);
     });
   });
