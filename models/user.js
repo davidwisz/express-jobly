@@ -1,7 +1,7 @@
 const db = require("../db");
 const ExpressError = require("../helpers/expressError");
 const partialUpdate = require("../helpers/partialUpdate");
-const bycrpt = require('bcrypt')
+const bcrypt = require('bcrypt')
 const { BCRYPT_WORK_FACTOR } = require('../config')
 
 
@@ -12,7 +12,7 @@ class User {
 
   static async create(data) {
     let { username, password, first_name, last_name, email, photo_url, is_admin } = data;
-    const hashedPassword = await bycrpt.hash(password, BCRYPT_WORK_FACTOR);
+    const hashedPassword = await bcrypt.hash(password, BCRYPT_WORK_FACTOR);
     if (!is_admin) {
       is_admin = false;
     }
@@ -38,7 +38,7 @@ class User {
     const user = result.rows[0];
     
     if (user){
-      let isValid = await bycrpt.compare(password, user.password);
+      let isValid = await bcrypt.compare(password, user.password);
       if (isValid) {
         return user;
       }
