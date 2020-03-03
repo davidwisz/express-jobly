@@ -5,17 +5,30 @@ const User = require("../../models/user");
 const request = require("supertest");
 
 describe("User Routes Test", function () {
-  let u1, u2, u3;
+  let u1, u2, u3, adminUser, token;
 
   beforeEach(async function () {
     await db.query("DELETE FROM users");
+
+    adminUser = {
+      username: 'john',
+      password: '123456',
+      first_name: 'John',
+      last_name: 'Smith',
+      email: 'email@email.com',
+      is_admin: true,
+    };
+    let response = await request(app).post(`/auth/register`).send(adminUser);
+
+    token = response.body.token;
+    
     u1 = await User.create({
       username: "A",
       password: "somepassword",
       first_name: "John",
       last_name: "Doe",
       email: "johndoe@gmail.com",
-      photo_url: "http://someurl.com"
+      photo_url: "http://someurl.com",
     });
     u2 = await User.create({
       username: "B",
@@ -38,22 +51,28 @@ describe("User Routes Test", function () {
   describe("GET /users/", function () {
     test("can get all users", async function () {
       let response = await request(app)
-        .get('/users');
+        .get('/users').send({ token });
       expect(response.statusCode).toEqual(200);
-      expect(response.body.users.length).toEqual(3);
+      expect(response.body.users.length).toEqual(4);
       delete u1.photo_url;
       delete u2.photo_url;
       delete u3.photo_url;
-      expect(response.body).toEqual({ users: [u1, u2, u3] });
+      delete u1.is_admin;
+      delete u2.is_admin;
+      delete u3.is_admin;
+      delete adminUser.is_admin;
+      delete adminUser.password;
+      expect(response.body).toEqual({ users: [u1, u2, u3, adminUser] });
     });
   });
 
   describe("GET /users/:username", function () {
     test("can get a user", async function () {
       let response = await request(app)
-        .get(`/users/${u1.username}`)
+        .get(`/users/${u1.username}`).send({ token });
       expect(response.statusCode).toEqual(200);
       delete u1.password;
+      delete u1.is_admin;
       expect(response.body).toEqual({ user: u1 })
     });
   });
@@ -65,7 +84,8 @@ describe("User Routes Test", function () {
         password: "somepassword",
         first_name: "John",
         last_name: "Doe",
-        email: "createuser@gmail.com"
+        email: "createuser@gmail.com",
+        is_admin: false
       };
       let response = await request(app)
         .post('/users').send(user);
@@ -74,8 +94,8 @@ describe("User Routes Test", function () {
       user.photo_url = null;
       expect(response.body).toEqual({ user });
 
-      const getUserResponse = await request(app).get('/users');
-      expect(getUserResponse.body.users.length).toEqual(4);
+      const getUserResponse = await request(app).get('/users').send({token});
+      expect(getUserResponse.body.users.length).toEqual(5);
 
     });
 
@@ -97,10 +117,10 @@ describe("User Routes Test", function () {
   describe("PATCH /users/:username", function () {
     test("can update a user", async function () {
       let changes = {
-        first_name: 'Jane';
+        first_name: 'Jane'
       }
       let response = await request(app)
-        .patch(`/users/${u1.username}`).send(changes);
+        .patch(`/users/${u1.username}`).send({ ...changes, token });
 
       expect(response.statusCode).toEqual(200);
       u1.first_name = 'Jane';
@@ -112,10 +132,10 @@ describe("User Routes Test", function () {
 
     test("trying to update a user with invalid email", async function () {
       let user = {
-        email: 'asd';
+        email: 'asd'
       };
       let response = await request(app)
-        .patch(`/users/{u1.username}`).send(user);
+        .patch(`/users/{u1.username}`).send({ ...user, token });
       expect(response.statusCode).toEqual(400);
       expect(response.body.message[0]).toContain('email');
     });
@@ -124,7 +144,7 @@ describe("User Routes Test", function () {
   describe("DELETE /users/:username", function () {
     test("can delete a user", async function () {
       let response = await request(app)
-        .delete(`/users/${u1.username}`);
+        .delete(`/users/${u1.username}`).send({token});
       expect(response.statusCode).toEqual(200);
       expect(response.body).toEqual({ message: "User deleted." });
 

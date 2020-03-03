@@ -5,42 +5,45 @@ const User = require("../../models/user");
 
 const request = require("supertest");
 
-describe("User Routes Test", function () {
-  let u1, u2, u3;
+describe("Auth Routes Test", function () {
+  let u1;
 
-//   beforeEach(async function () {
-//     await db.query("DELETE FROM users");
-//     u1 = await User.create({
-//       username: "NotAdmin",
-//       password: "somepassword",
-//       first_name: "John",
-//       last_name: "Doe",
-//       email: "johndoe@gmail.com",
-//       photo_url: "http://someurl.com"
-//     });
-//     u2 = await User.create({
-//       username: "Admin",
-//       password: "somepassword",
-//       first_name: "John",
-//       last_name: "Doe",
-//       email: "anotheremail@gmail.com",
-//       photo_url: "http://someurl.com",
-//       is_admin: true
-//     });
-//   })
+  beforeEach(async function () {
+    await db.query("DELETE FROM users");
+    u1 = await User.create({
+      username: "NotAdmin",
+      password: "somepassword",
+      first_name: "John",
+      last_name: "Doe",
+      email: "johndoe@gmail.com",
+      photo_url: "http://someurl.com"
+    });
+  })
 
-//   describe("POST /login", function () {
-//     test("can get all users", async function () {
-//       let response = await request(app)
-//         .get('/users');
-//       expect(response.statusCode).toEqual(200);
-//       expect(response.body.users.length).toEqual(3);
-//       delete u1.photo_url;
-//       delete u2.photo_url;
-//       delete u3.photo_url;
-//       expect(response.body).toEqual({ users: [u1, u2, u3] });
-//     });
-//   });
+  describe("POST /auth/login", function () {
+    test("can authenticate an existing user", async function () {
+      let creds = {
+        username: "NotAdmin",
+        password: "somepassword",
+      }
+      let response = await request(app)
+        .post('/auth/login').send(creds);
+      expect(response.statusCode).toEqual(200);
+      expect(response.body.token).not.toBeUndefined();
+      expect(response.body.token.length).toBeGreaterThan(150);
+    });
+
+    test("won't authenticate bad credentials", async function () {
+      let creds = {
+        username: "NotAdmin",
+        password: "somepassworddddd",
+      }
+      let response = await request(app)
+        .post('/auth/login').send(creds);
+      expect(response.statusCode).toEqual(400);
+      expect(response.body.message).toContain("Invalid");
+    });
+  });
 
 //   describe("GET /users/:username", function () {
 //     test("can get a user", async function () {
@@ -126,8 +129,8 @@ describe("User Routes Test", function () {
 //       expect(userResponse.body.users.length).toEqual(2);
 //     });
 //   });
-// });
+});
 
-// afterAll(async function () {
-//   await db.end();
+afterAll(async function () {
+  await db.end();
 });
